@@ -1,6 +1,7 @@
 import { StrictMode } from "react"
 import { getFirebase } from "../firebase"
 import { collection, doc, setDoc, getDoc } from "firebase/firestore"
+import { getCuleMaps } from "../operations"
 
 const Main = () => {
   return (
@@ -68,4 +69,4 @@ const testStoreAcccess = async () => {
   }
 }
 
-testStoreAcccess()
+getCuleMaps()
