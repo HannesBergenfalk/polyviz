@@ -1,72 +1,64 @@
-import { StrictMode } from "react"
-import { getFirebase } from "../firebase"
-import { collection, doc, setDoc, getDoc } from "firebase/firestore"
-import { getCuleMaps } from "../operations"
+import { StrictMode, FC } from "react"
+import {
+  RouterProvider,
+  createRouter,
+  createRootRoute,
+  Outlet,
+  createRoute,
+  useParams,
+} from "@tanstack/react-router"
+import { CssBaseline, ThemeProvider } from "@mui/material"
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
+import { theme } from "./theme"
+import { CuleLoader } from "./culePage/CulePage"
+import { NavLoader } from "./navPage/NavPage"
 
-const Main = () => {
-  return (
-    <StrictMode>
-      <div>Hi</div>
-    </StrictMode>
-  )
+const queryClient = new QueryClient()
+
+const App: FC = () => (
+  <ThemeProvider theme={theme}>
+    <QueryClientProvider client={queryClient}>
+      <CssBaseline />
+      <Outlet />
+    </QueryClientProvider>
+  </ThemeProvider>
+)
+
+const rootRoute = createRootRoute({
+  component: App,
+})
+
+const CuleIdInject = () => {
+  const { culeId } = culeRoute.useParams()
+  return CuleLoader({ culeId })
 }
 
-export default Main
+const culeRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: "/cule/$culeId",
+  component: CuleIdInject,
+})
 
-const testStoreAcccess = async () => {
-  const { firestore } = getFirebase()
-  const citiesRef = collection(firestore, "cities")
+export const navRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: "/",
+  component: NavLoader,
+})
 
-  await setDoc(doc(citiesRef, "SF"), {
-    name: "San Francisco",
-    state: "CA",
-    country: "USA",
-    capital: false,
-    population: 860000,
-    regions: ["west_coast", "norcal"],
-  })
-  await setDoc(doc(citiesRef, "LA"), {
-    name: "Los Angeles",
-    state: "CA",
-    country: "USA",
-    capital: false,
-    population: 3900000,
-    regions: ["west_coast", "socal"],
-  })
-  await setDoc(doc(citiesRef, "DC"), {
-    name: "Washington, D.C.",
-    state: null,
-    country: "USA",
-    capital: true,
-    population: 680000,
-    regions: ["east_coast"],
-  })
-  await setDoc(doc(citiesRef, "TOK"), {
-    name: "Tokyo",
-    state: null,
-    country: "Japan",
-    capital: true,
-    population: 9000000,
-    regions: ["kanto", "honshu"],
-  })
-  await setDoc(doc(citiesRef, "BJ"), {
-    name: "Beijing",
-    state: null,
-    country: "China",
-    capital: true,
-    population: 21500000,
-    regions: ["jingjinji", "hebei"],
-  })
+const routeTree = rootRoute.addChildren([navRoute, culeRoute])
 
-  const docRef = doc(firestore, "cities", "SF")
-  const docSnap = await getDoc(docRef)
+const router = createRouter({ routeTree })
 
-  if (docSnap.exists()) {
-    console.log("Document data:", docSnap.data())
-  } else {
-    // docSnap.data() will be undefined in this case
-    console.log("No such document!")
+declare module "@tanstack/react-router" {
+  interface Register {
+    router: typeof router
   }
 }
 
-getCuleMaps()
+const Main = () => (
+  <StrictMode>
+    <RouterProvider router={router} />
+  </StrictMode>
+)
+
+export default Main

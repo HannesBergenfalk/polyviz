@@ -1,7 +1,17 @@
-import { collection, deleteDoc, doc, getDocs, query, setDoc, updateDoc } from "firebase/firestore";
-import { getFirebase } from "./firebase";
+import {
+    collection,
+    deleteDoc,
+    doc,
+    getDoc,
+    getDocs,
+    query,
+    setDoc,
+    updateDoc,
+    writeBatch,
+} from "firebase/firestore"
+import { getFirebase } from "./firebase"
 import { Coord } from "media-overlay-library"
-
+import { CuleNode } from "../types"
 
 const { firestore } = getFirebase()
 
@@ -11,8 +21,33 @@ export const getCuleMaps = async () => {
     const docData = []
     querySnapshot.forEach((doc) => {
         docData.push({ id: doc.id, ...doc.data() })
-    });
+    })
     return docData
+}
+
+export const getCuleMapData = async (culeId: string) => {
+    const docRef = doc(collection(firestore, "polyculeMaps"), culeId)
+    const nodesRef = query(collection(docRef, "nodes"))
+    const edgesRef = query(collection(docRef, "edges"))
+    const docSnap = await getDoc(docRef);
+    if (docSnap.exists()) {
+        const nodes = []
+        const edges = []
+        const nodesSnapshot = await getDocs(nodesRef)
+        const edgesSnapshot = await getDocs(edgesRef)
+        nodesSnapshot.forEach((doc) => {
+            nodes.push({ id: doc.id, ...doc.data() })
+        })
+        edgesSnapshot.forEach((doc) => {
+            edges.push({ id: doc.id, ...doc.data() })
+        })
+        return {
+            ...docSnap.data(),
+            id: culeId,
+            edges,
+            nodes,
+        }
+    }
 }
 interface NodeInput {
     culeId: string
@@ -26,8 +61,23 @@ export const uddNode = async (input: NodeInput) => {
     const nodeCol = collection(firestore, "polyculeMaps", culeId, "nodes")
     const docRef = nodeId !== undefined ? doc(nodeCol, nodeId) : doc(nodeCol)
     await setDoc(docRef, {
-        ...rest
+        ...rest,
     })
+}
+
+export const bulkUpdateNodes = async (
+    culeId: string,
+    data: ReadonlyArray<CuleNode>
+) => {
+    const batch = writeBatch(firestore)
+
+    data.forEach((node) => {
+        const { id, ...nodeProps } = node
+        const docRef = doc(firestore, "polyculeMaps", culeId, "nodes", id)
+        batch.set(docRef, nodeProps)
+    })
+
+    await batch.commit()
 }
 
 export const deleteNode = async (culeId: string, nodeId: string) => {
@@ -50,7 +100,7 @@ export const uddEdge = async (input: EdgeInput) => {
     const edgeCol = collection(firestore, "polyculeMaps", culeId, "edges")
     const docRef = edgeId !== undefined ? doc(edgeCol, edgeId) : doc(edgeCol)
     await setDoc(docRef, {
-        ...rest
+        ...rest,
     })
 }
 
@@ -67,15 +117,24 @@ interface CuleInput {
 export const uddCule = async (input: CuleInput) => {
     const { culeId, title } = input
     const culeCol = collection(firestore, "polyculeMaps")
-    const docRef = culeId !== undefined ? doc(culeCol, culeId) : doc(culeCol)
+    if (culeId === undefined) {
+        const docRef = doc(culeCol)
+        collection(docRef, "nodes")
+        collection(docRef, "edges")
+        await setDoc(docRef, {
+            title,
+        })
+        return
+    }
+    const docRef = doc(culeCol, culeId)
     await setDoc(docRef, {
-        title
+        title,
     })
 }
 
 export const deleteCule = async (culeId: string) => {
     const docRef = doc(firestore, "polyculeMaps", culeId)
     updateDoc(docRef, {
-        hidden: true
+        hidden: true,
     })
 }
