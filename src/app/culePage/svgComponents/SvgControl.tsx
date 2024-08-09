@@ -66,6 +66,7 @@ export const SvgControl: FC<SvgControlProps> = ({ addEdge, addNode }) => {
   const updateNodePosition = useCallback(
     (pos: Coord, index: number) => {
       const currentNode = nodes[index]
+      console.log(currentNode)
       uddNode({ ...currentNode, culeId: id, position: pos })
     },
     [nodes, id]

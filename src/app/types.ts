@@ -23,9 +23,12 @@ export interface CuleEdge {
     readonly style: LineStyle
 }
 
-export type CuleData = {
+export type CuleBaseData = {
     readonly id: string
     readonly title: string
+}
+
+export type CuleData = CuleBaseData & {
     readonly nodes: ReadonlyArray<CuleNode>
     readonly edges: ReadonlyArray<CuleEdge>
 }

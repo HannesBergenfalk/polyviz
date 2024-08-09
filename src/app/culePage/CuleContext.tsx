@@ -23,6 +23,7 @@ export const CuleProvider: FC<PropsWithChildren<CuleContextProps>> = ({
   children,
   data,
 }) => {
+  console.log(data)
   const [state, update] = useAutoState<CuleControlState>({
     elementToEdit: null,
     activeMode: data.nodes.length === 0 ? Mode.add : Mode.edit,

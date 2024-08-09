@@ -44,7 +44,7 @@ export const EdgeEdit: FC<{ readonly nI1: number; readonly nI2: number }> = ({
       ...edgeData,
       style: state.style,
       width: state.width,
-      label: state.label === "" ? undefined : state.label,
+      ...(state.label === "" ? {} : { label: state.label }),
     })
   }, [edgeData, state])
   const timeoutRef = useRef(-1)

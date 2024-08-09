@@ -7,15 +7,17 @@ import { ToolBar } from "./ToolBar"
 import { PopupEditContainer } from "./popupEdit/PopupEditContainer"
 import { AutoGraphButton } from "./AutoGraphButton"
 import { NewNode } from "./NewNode"
-import { getCuleMapData } from "../firebase/operations"
+import { listenCuleMapData } from "../firebase/operations"
 
 export const CuleLoader: FC<{ culeId: string }> = ({ culeId }) => {
   const [data, setData] = useState<CuleData>()
-  useEffect(() => {
-    getCuleMapData(culeId).then((res) => {
-      setData(res as unknown as CuleData)
-    })
-  }, [])
+  useEffect(
+    () =>
+      listenCuleMapData(culeId, (newData) =>
+        setData((prev) => ({ ...prev, ...newData }))
+      ),
+    [culeId]
+  )
   if (data === undefined) {
     return null
   }
