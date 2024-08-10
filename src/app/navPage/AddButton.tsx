@@ -14,6 +14,7 @@ import { uddCule } from "../firebase/operations"
 
 export const AddButton: FC = () => {
   const [open, setOpen] = useState(false)
+  const [lock, setLock] = useState(false)
   const [input, setInput] = useState("")
   const onSubmit = useCallback(() => {
     if (input === "") {
@@ -21,8 +22,14 @@ export const AddButton: FC = () => {
     }
     setOpen(false)
     setInput("")
-    uddCule({ title: input })
+    uddCule({ title: input }).then(() => setLock(false))
   }, [input])
+  const onClick = useCallback(() => {
+    if (!lock) {
+      setOpen(true)
+      setLock(true)
+    }
+  }, [lock])
   const theme = useTheme()
   const bigScreen = useMediaQuery(theme.breakpoints.up("sm"))
   return (
@@ -36,6 +43,11 @@ export const AddButton: FC = () => {
             required={true}
             value={input}
             onChange={(e) => setInput(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.code === "Enter") {
+                onSubmit()
+              }
+            }}
           />
           <Stack direction={"row-reverse"} mt={2}>
             <Button
@@ -51,7 +63,7 @@ export const AddButton: FC = () => {
         </Box>
       </CenterPopUp>
       <Fab
-        onClick={() => setOpen(true)}
+        onClick={onClick}
         color="secondary"
         sx={
           bigScreen

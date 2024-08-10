@@ -35,6 +35,7 @@ export const NewNode: FC = () => {
           required={true}
           value={input}
           onChange={(e) => setInput(e.target.value)}
+          onKeyDown={(e) => (e.code === "Enter" ? onSubmit() : null)}
         />
         <Stack direction={"row-reverse"} mt={2}>
           <Button
